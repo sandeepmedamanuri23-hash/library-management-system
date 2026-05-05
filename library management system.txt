@@ -1,0 +1,137 @@
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+class Book {
+public:
+int id;
+char name[50];
+char author[50];
+int issued;
+
+void input() {
+cout << "Enter Book ID: ";
+cin >> id;
+cout << "Enter Book Name: ";
+cin.ignore();
+cin.getline(name, 50);
+cout << "Enter Author Name: ";
+cin.getline(author, 50);
+issued = 0;
+}
+
+void display() {
+cout << "\nID: " << id
+<< "\nName: " << name
+<< "\nAuthor: " << author
+<< "\nStatus: " << (issued ? "Issued" : "Available") << endl;
+}
+};
+
+void addBook() {
+Book b;
+ofstream file("library.dat", ios::binary | ios::app);
+b.input();
+file.write((char*)&b, sizeof(b));
+file.close();
+cout << "Book added successfully!\n";
+}
+
+void showBooks() {
+Book b;
+ifstream file("library.dat", ios::binary);
+
+while (file.read((char*)&b, sizeof(b))) {
+b.display();
+}
+file.close();
+}
+
+void searchBook() {
+int id;
+Book b;
+bool found = false;
+
+cout << "Enter Book ID to search: ";
+cin >> id;
+
+ifstream file("library.dat", ios::binary);
+while (file.read((char*)&b, sizeof(b))) {
+if (b.id == id) {
+b.display();
+found = true;
+break;
+}
+}
+file.close();
+
+if (!found)
+cout << "Book not found!\n";
+}
+
+void issueBook() {
+int id;
+Book b;
+
+cout << "Enter Book ID to issue: ";
+cin >> id;
+
+fstream file("library.dat", ios::binary | ios::in | ios::out);
+
+while (file.read((char*)&b, sizeof(b))) {
+if (b.id == id && b.issued == 0) {
+b.issued = 1;
+file.seekp(-sizeof(b), ios::cur);
+file.write((char*)&b, sizeof(b));
+cout << "Book issued!\n";
+file.close();
+return;
+}
+}
+file.close();
+cout << "Book not available!\n";
+}
+
+void returnBook() {
+int id;
+Book b;
+
+cout << "Enter Book ID to return: ";
+cin >> id;
+
+fstream file("library.dat", ios::binary | ios::in | ios::out);
+
+while (file.read((char*)&b, sizeof(b))) {
+if (b.id == id && b.issued == 1) {
+b.issued = 0;
+file.seekp(-sizeof(b), ios::cur);
+file.write((char*)&b, sizeof(b));
+cout << "Book returned!\n";
+file.close();
+return;
+}
+}
+file.close();
+cout << "Invalid return!\n";
+}
+
+int main() {
+int choice;
+
+while (true) {
+cout << "\n--- Library System ---\n";
+cout << "1. Add Book\n2. Show Books\n3. Search Book\n4. Issue Book\n5. Return Book\n6. Exit\n";
+cout << "Enter choice: ";
+cin >> choice;
+
+switch (choice) {
+case 1: addBook(); break;
+case 2: showBooks(); break;
+case 3: searchBook(); break;
+case 4: issueBook(); break;
+case 5: returnBook(); break;
+case 6: return 0;
+default: cout << "Invalid choice!\n";
+}
+}
+}
